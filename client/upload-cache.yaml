@@ -8,12 +8,20 @@ spec:
       type: string
     - name: key
       type: string
+  results:
+    - name: digest
+      type: string
   image: cgr.dev/chainguard/curl:latest-dev
   env:
     - name: CACHE_KEY
       value: $(params.key)
     - name: CACHE_FILE_PATH
       value: $(params.path)
+    - name: OUTPUT_DIGEST
+      value: $(outputs.digest.path)
   workingDir: /tekton/home
   script: |
     curl -X PUT -H "Content-Type: application/octet-stream" --data-binary "@${CACHE_FILE_PATH}" "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}"
+
+    # Output digest - tee it out because results aren't supported yet.
+    sha256sum "${CACHE_FILE_PATH}" | cut -f1 -d' ' | tee "${OUTPUT_DIGEST}"

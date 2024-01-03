@@ -8,12 +8,26 @@ spec:
       type: string
     - name: key
       type: string
+    - name: digest
+      type: string
+      # We can't have optional params. :(
+      default: "-"
   image: cgr.dev/chainguard/curl:latest-dev
   env:
     - name: CACHE_KEY
       value: $(params.key)
     - name: CACHE_FILE_PATH
       value: $(params.path)
+    - name: EXPECTED_DIGEST
+      value: $(params.digest)
   workingDir: /tekton/home
   script: |
-    curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}" > "${CACHE_FILE_PATH}"
+    curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}" > "${CACHE_FILE_PATH}" || echo "Cache miss" && exit 0
+
+    if [ "${EXPECTED_DIGEST}" != "-" ]; then
+      GOT_DIGEST=$(sha256sum "${CACHE_FILE_PATH}" | cut -f1 -d' ')
+      if [ "${GOT_DIGEST}" != "${EXPECTED_DIGEST}" ]; then
+        echo "Expected digest ${EXPECTED_DIGEST} but got ${GOT_DIGEST}"
+        exit 1
+      fi
+    fi

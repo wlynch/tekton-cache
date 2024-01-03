@@ -13,6 +13,8 @@ spec:
             value: "output.txt"
           - name: key
             value: "cache"
+          #- name: digest
+          #   value: 08ad3ae390a374c648964ca99b1891fd869a9434f6101b433eb15fb1fd8526f6
       - name: write-file
         workingDir: /tekton/home
         image: cgr.dev/chainguard/busybox
