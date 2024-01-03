@@ -6,12 +6,6 @@ spec:
   timeout: 10m
   taskSpec:
     steps:
-      # This works
-      - image: cgr.dev/chainguard/curl:latest-dev
-        workingDir: /tekton/home
-        script: |
-          curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/cache"
-      # This doesn't?
       - ref:
           name: get-cache
         params:

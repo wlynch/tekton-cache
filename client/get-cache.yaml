@@ -10,13 +10,10 @@ spec:
       type: string
   image: cgr.dev/chainguard/curl:latest-dev
   env:
-    - name: KEY
+    - name: CACHE_KEY
       value: $(params.key)
-    - name: PATH
+    - name: CACHE_FILE_PATH
       value: $(params.path)
   workingDir: /tekton/home
-  command: ["env"]
-  #script: |
-  #  env
-  #  which curl
-  #  curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${KEY}" > "${PATH}"
+  script: |
+    curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}" > "${CACHE_FILE_PATH}"

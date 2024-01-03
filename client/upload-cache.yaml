@@ -10,10 +10,10 @@ spec:
       type: string
   image: cgr.dev/chainguard/curl:latest-dev
   env:
-    - name: KEY
+    - name: CACHE_KEY
       value: $(params.key)
-    - name: PATH
+    - name: CACHE_FILE_PATH
       value: $(params.path)
   workingDir: /tekton/home
   script: |
-    curl -X PUT -H "Content-Type: application/octet-stream" --data-binary "@${PATH}" "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${KEY}"
+    curl -X PUT -H "Content-Type: application/octet-stream" --data-binary "@${CACHE_FILE_PATH}" "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}"
