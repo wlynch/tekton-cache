@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: my-taskrun-
+spec:
+  timeout: 10m
+  taskSpec:
+    steps:
+      - name: write-file
+        workingDir: /tekton/home
+        image: cgr.dev/chainguard/busybox
+        script: |
+          echo "Hello, World!" > output.txt
+          ls -l /tekton/scripts
+      - name: cache-file
+        workingDir: /tekton/home
+        image: cgr.dev/chainguard/curl:latest-dev
+        script: |
+          curl -X PUT -H "Content-Type: application/octet-stream" --data-binary @output.txt http://cache-service.tekton-pipelines.svc.cluster.local:8080/cache
+      - name: get-cache
+        workingDir: /tekton/home
+        image: cgr.dev/chainguard/curl:latest-dev
+        script: |
+          curl http://cache-service.tekton-pipelines.svc.cluster.local:8080/cache
