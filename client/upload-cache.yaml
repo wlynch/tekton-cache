@@ -16,4 +16,4 @@ spec:
       value: $(params.path)
   workingDir: /tekton/home
   script: |
-    curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${KEY}" > "${PATH}"
+    curl -X PUT -H "Content-Type: application/octet-stream" --data-binary "@${PATH}" "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${KEY}"
