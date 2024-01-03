@@ -1,0 +1,19 @@
+apiVersion: tekton.dev/v1alpha1
+kind: StepAction
+metadata:
+  name: get-cache
+spec:
+  params:
+    - name: path
+      type: string
+    - name: key
+      type: string
+  image: cgr.dev/chainguard/curl:latest-dev
+  env:
+    - name: KEY
+      value: $(params.key)
+    - name: PATH
+      value: $(params.path)
+  workingDir: /tekton/home
+  script: |
+    curl -X PUT -H "Content-Type: application/octet-stream" --data-binary "@${PATH}" "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${KEY}"
