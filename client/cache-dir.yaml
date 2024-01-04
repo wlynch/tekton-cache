@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: cache-dir-
+spec:
+  timeout: 10m
+  taskSpec:
+    steps:
+      - ref:
+          name: get-cache
+        params:
+          - name: path
+            value: "."
+          - name: key
+            value: "cachedir"
+      - name: write-file
+        workingDir: /tekton/home
+        image: cgr.dev/chainguard/busybox
+        script: |
+          ls
+          touch `date +%s`
+      - ref:
+          name: upload-cache
+        params:
+          - name: path
+            value: "."
+          - name: key
+            value: "cachedir"

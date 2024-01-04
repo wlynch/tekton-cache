@@ -22,12 +22,32 @@ spec:
       value: $(params.digest)
   workingDir: /tekton/home
   script: |
-    curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}" > "${CACHE_FILE_PATH}" || echo "Cache miss" && exit 0
+    # Test for cache hit
+    curl --fail-with-body "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}" || exit 0
+    if [ $? -ne 0 ]; then
+      echo "Cache miss"
+      exit 0
+    fi
 
+    # Fetch content
+    TMPFILE="$(mktemp -d)/file"
+    curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}/blob" > "${TMPFILE}"
+    GOT_DIGEST=$(sha256sum "${TMPFILE}" | cut -f1 -d' ')
     if [ "${EXPECTED_DIGEST}" != "-" ]; then
-      GOT_DIGEST=$(sha256sum "${CACHE_FILE_PATH}" | cut -f1 -d' ')
       if [ "${GOT_DIGEST}" != "${EXPECTED_DIGEST}" ]; then
         echo "Expected digest ${EXPECTED_DIGEST} but got ${GOT_DIGEST}"
         exit 1
       fi
+    fi
+    echo "${GOT_DIGEST}"
+
+    # Extract content
+    TYPE=$(curl "http://cache-service.tekton-pipelines.svc.cluster.local:8080/${CACHE_KEY}")
+    if [[ "${TYPE}" == *"error reading file"* ]]; then
+      exit 1
+    # Hack until jq is in image
+    elif [[ "${TYPE}" == *"application/tar+gzip"* ]]; then
+      tar -xzf "${TMPFILE}" -C ${CACHE_FILE_PATH}
+    else 
+      mv "${TMPFILE}" "${CACHE_FILE_PATH}"
     fi
